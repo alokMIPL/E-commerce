@@ -1,57 +1,52 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import User from "@/backend/models/user";
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs";
 import dbConnect from "@/backend/config/dbConnect";
 
-export default async function auth(req,res) {
-  return await NextAuth(req,res,{
-    session:{
-      strategy:"jwt"
-    },
-    providers:[
-      CredentialsProvider({
-        async authorize(credentials, req){
-          dbConnect();
+export const authOptions = {
+  session: {
+    strategy: "jwt",
+  },
+  providers: [
+    CredentialsProvider({
+      async authorize(credentials) {
+        await dbConnect();
 
-          const {email, password} = credentials
+        const { email, password } = credentials;
+        const user = await User.findOne({ email }).select("+password");
 
-          const user = await User.findOne({email}).select("+password")
-
-          if(!user){
-            throw new Error('Inavlid Email or Password')
-          }
-
-          const isPasswordMatched = await bcrypt.compare(
-            password, user.password
-          );
-
-          if(!isPasswordMatched){
-            throw new Error("Invalid Email or Password");
-          }
-
-          return user;
-
+        if (!user) {
+          throw new Error("Invalid Email or Password");
         }
-      })
-    ],
-    callbacks:{
-      jwt:async ({token, user}) => {
-        user && (token.user = user);
-        return token;
+
+        const isPasswordMatched = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordMatched) {
+          throw new Error("Invalid Email or Password");
+        }
+
+        return user;
       },
-      session: async ({session, token}) => {
-        session.user = token.user;
-
-        // delete password from ssession
-        delete session?.user?.password;
-
-        return session;
-      }
+    }),
+  ],
+  callbacks: {
+    jwt: async ({ token, user }) => {
+      if (user) token.user = user;
+      return token;
     },
-    pages:{
-      signIn:'/login'
+    session: async ({ session, token }) => {
+      session.user = token.user;
+      delete session?.user?.password;
+      return session;
     },
-    secret: process.env.NEXTAUTH_SECRET,
-  })
+  },
+  pages: {
+    signIn: "/login",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};
+
+export default function auth(req, res) {
+  return NextAuth(req, res, authOptions);
 }
