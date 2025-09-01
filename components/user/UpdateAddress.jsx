@@ -1,28 +1,38 @@
 "use client";
-import React, { useContext, useEffect, useState } from "react";
+
+import React, { useState, useContext, useEffect } from "react";
+
+import Sidebar from "../layouts/Sidebar";
 
 import { countries } from "countries-list";
-import Sidebar from "../layouts/Sidebar";
+import { toast } from "react-toastify";
 import { AuthContext } from "@/context/AuthContext";
 
-const NewAddress = () => {
-  const { error, addNewAddress, clearErrors } = useContext(AuthContext);
+const UpdateAddress = ({ id, address }) => {
+  const { error, updated, setUpdated, updateAddress, deleteAddress, clearErrors } = useContext(AuthContext);
 
   const countriesList = Object.values(countries);
 
-  const [street, setStreet] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
-  const [phoneNo, setPhonoNo] = useState("");
-  const [country, setCountry] = useState("");
+  const [street, setStreet] = useState(address.street);
+  const [city, setCity] = useState(address.city);
+  const [state, setState] = useState(address.state);
+  const [zipCode, setZipCode] = useState(address.zipCode);
+  const [phoneNo, setPhonoNo] = useState(address.phoneNo);
+  const [country, setCountry] = useState(address.country);
+
+  console.log("updated", updated);
 
   useEffect(() => {
+    if (updated) {
+      toast.success("Address Updated");
+      setUpdated(false);
+    }
+
     if (error) {
       toast.error(error);
       clearErrors();
     }
-  }, [error]);
+  }, [error, updated]);
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -36,9 +46,11 @@ const NewAddress = () => {
       country,
     };
 
-    console.log("newAddress!!!!!!!!!", newAddress);
+    updateAddress(id, newAddress);
+  };
 
-    addNewAddress(newAddress);
+  const deleteHandler = () => {
+    deleteAddress(id);
   };
 
   return (
@@ -52,9 +64,9 @@ const NewAddress = () => {
                 style={{ maxWidth: "480px" }}
                 className="mt-1 mb-20 p-4 md:p-7 mx-auto rounded bg-white shadow-lg"
               >
-                <form onSubmit={submitHandler}>
+                <form >
                   <h2 className="mb-5 text-2xl font-semibold">
-                    Add new Address
+                    Update Address
                   </h2>
 
                   <div className="mb-4 md:col-span-2">
@@ -131,12 +143,23 @@ const NewAddress = () => {
                     </select>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="my-2 px-4 py-2 text-center w-full inline-block text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-                  >
-                    Add
-                  </button>
+                  <div className="grid md:grid-cols-2 gap-x-3">
+                    <button
+                      type="submit"
+                      className="my-2 px-4 py-2 text-center w-full inline-block text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                      onClick={submitHandler}
+                    >
+                      Update
+                    </button>
+
+                    <button
+                      type="button"
+                      className="my-2 px-4 py-2 text-center w-full inline-block text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700"
+                      onClick={deleteHandler}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </form>
               </div>
             </main>
@@ -147,4 +170,4 @@ const NewAddress = () => {
   );
 };
 
-export default NewAddress;
+export default UpdateAddress;
