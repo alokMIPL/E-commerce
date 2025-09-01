@@ -31,16 +31,22 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user) token.user = user;
-      return token;
-    },
-    session: async ({ session, token }) => {
-      session.user = token.user;
-      delete session?.user?.password;
-      return session;
-    },
+  jwt: async ({ token, user, trigger }) => {
+    if (user) token.user = user;
+    
+    // Update session when triggered
+    if (trigger === "update") {
+      const updatedUser = await User.findById(token.user._id);
+      token.user = updatedUser;
+    }
+    return token;
   },
+  session: async ({ session, token }) => {
+    session.user = token.user;
+    delete session?.user?.password;
+    return session;
+  },
+},
   pages: {
     signIn: "/login",
   },
