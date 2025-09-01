@@ -1,18 +1,32 @@
-import Profile from '@/components/auth/Profile'
-import axios from 'axios'
-import React from 'react'
+import Profile from "@/components/auth/Profile";
+import axios from "axios";
+import React from "react";
+import { cookies } from "next/headers";
 
 const getAddresses = async () => {
-  const { data } = await axios.get(`${process.env.API_URL}/api/address`);
+  
+  const nextCookies = cookies();
+
+  const nextAuthSessionToken = nextCookies.get("next-auth.session-token");
+
+  console.log("nextAuthSessionToken", nextAuthSessionToken);
+
+  const { data } = await axios.get(`${process.env.API_URL}/api/address`, {
+    headers: {
+      Cookie: `next-auth.session-token=${nextAuthSessionToken?.value}`,
+    },
+  });
+
   return data?.addresses;
-}
+};
 
 const ProfilePage = async () => {
-
   const addresses = await getAddresses();
   return (
-    <div><Profile addresses={addresses}/></div>
-  )
-}
+    <div>
+      <Profile addresses={addresses} />
+    </div>
+  );
+};
 
-export default ProfilePage
+export default ProfilePage;
