@@ -11,7 +11,7 @@ export const authOptions = {
   providers: [
     CredentialsProvider({
       async authorize(credentials) {
-        await dbConnect();
+        dbConnect();
 
         const { email, password } = credentials;
         const user = await User.findOne({ email }).select("+password");

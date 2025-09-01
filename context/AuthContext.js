@@ -68,6 +68,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updatePassword = async ({ currentPassword, newPassword }) => {
+    try {
+      const { data } = await axios.put(
+        `${process.env.API_URL}/api/auth/me/update_password`,
+        {
+          currentPassword,
+          newPassword,
+        }
+      );
+
+      // Check for both possible spellings
+      if (data?.sucess === true || data?.success === true) {
+        return { success: true };
+      }
+
+      return { success: false, error: "Password update failed" };
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "Something went wrong";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const addNewAddress = async (address) => {
     try {
       const { data } = await axios.post(
@@ -123,16 +147,17 @@ export const AuthProvider = ({ children }) => {
         registerUser,
         user,
         error,
+        loading,
+        updated,
         setUser,
         clearErrors,
         addNewAddress,
         updateAddress,
-        updated,
         setUpdated,
         deleteAddress,
         updateProfile,
         setLoading,
-        loading,
+        updatePassword,
       }}
     >
       {children}
